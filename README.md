@@ -1,7 +1,7 @@
 # Collection of scripts for my daily use
 
 > [!WARNING]
-> No guarantee or warranty; Use with caustion!
+> No guarantee or warranty; Use with caution!
 
 ## Tips for writing scripts for Status Bar
 
