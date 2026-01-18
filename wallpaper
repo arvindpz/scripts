@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# This script sets the background image from $WALLPAPER_DIR
+# It loops through the images in order of created at time
+# Invoke this script through a cron at regular intervals
+
+# Configs
+WALLPAPER_DIR=$HOME/Pictures/Wallpapers
+CACHE_DIR=$HOME/.cache/wallpaper
+CACHE_FILE=$CACHE_DIR/bg_index
+
+FEH_BG_SETTING="--bg-scale"  # Other thing I like is --bg-fill which preserves aspect ratio, but cuts some parts of the image
+
+function set_wallpaper() {
+  local image=$1
+  feh --no-fehbg $FEH_BG_SETTING $WALLPAPER_DIR/$image
+}
+
+function get_index() {
+  if [ ! -s $CACHE_FILE ]; then
+    echo 0 > $CACHE_FILE
+  fi
+
+  read index < $CACHE_FILE
+  echo $index
+}
+
+function get_next_image() {
+  local index=$1
+
+  local files=$(ls -1t $WALLPAPER_DIR)
+  local total=$(echo "$files" | wc -l)  # Double quotes around files preserves newlines in the output
+
+  # Increment index and get the corresponding file
+  index=$(echo "($index  % $total) + 1" | bc)
+  file=$(echo "$files" | sed -n ${index}p)
+
+  # Cache the incremented index
+  echo $index > $CACHE_FILE
+
+  # All echoes to stdout are captured by the caller
+  # I want only the last echo to be sent out to the callee
+  # Hence redirecting the logs to stderr
+  echo "[$0] [$(date -Iseconds)] $index/$total: $file" >&2
+
+  echo $file
+}
+
+cur_index=$(get_index)
+image=$(get_next_image $cur_index)
+set_wallpaper $image
+
