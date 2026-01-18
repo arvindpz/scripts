@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+handle_failure() {
+  exit_code=$1
+  line_num=$2
+  failed_cmd=$3
+  program=$4
+
+  error_msg="Something went wrong $program:$line_num - $failed_cmd exited with code: $exit_code"
+
+  notify-send "$error_msg"
+}
+
+trap 'handle_failure $? $LINENO "$BASH_COMMAND" "$BASH_SOURCE"' ERR

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# This should not be a separate program. It should be part of the each file
+LETTER_SPACING=$((3 * 1024))
+
+function display() {
+  icon=$1
+  text=$2
+  printf "<span letter_spacing=\"$LETTER_SPACING\">%s %s</span>" "$icon" "$text"
+}
+

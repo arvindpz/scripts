@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+
+function refresh_all_blocks() {
+  notify-send "Refreshing all blocks"
+  pkill -SIGUSR1 dwmblocks
+}
+
+function refresh_block() {
+  block=$1
+  msg=${2:-"Refreshed block $block"}
+  notify-send "$msg"
+  pkill -RTMIN+$1 dwmblocks
+}
+
+# This should be same as the number in dwmblocks-async's config.h
+SB_DATE=1
+SB_AUDIO=2
+SB_MIC=3
+SB_BATTERY=4
