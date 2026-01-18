@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+. "$(dirname $0)/sb-load-util"
+
+# Configurations
+DEVICE="/org/freedesktop/UPower/devices/battery_BAT0"
+
+# Max charge capacity of the battery
+BATTERY_HEALTH_OK_THRESHOLD=60
+
+BATTERY_LEVEL_FULL=97
+BATTERY_LEVEL_HIGH=75
+BATTERY_LEVEL_MEDIUM=40
+BATTERY_LEVEL_LOW=20
+# BATTERY_LEVEL_EMPTY= less than 20
+
+# Text for time metrics
+TIME_TO_FULL_STR="Time to full charge:"
+TIME_TO_EMPTY_STR="Time to empty:"
+
+# Configurations :: Icons
+declare -A icons
+
+icons[battery_full]="<span foreground='#00e600'>\uf240 </span>"
+icons[battery_high]="<span foreground='#3af478'>\uf241 </span>"
+icons[battery_medium]="<span foreground='#ffad08'>\uf242 </span>"
+icons[battery_low]="<span foreground='#ff8838'>\uf243 </span>"
+icons[battery_empty]="<span foreground='#ff6666'>\uf244 </span>"
+
+icons[charging_full]="<span foreground='#00e600'>\Uf0085 </span>"
+icons[charging_high]="<span foreground='#3af478'>\Uf008a </span>"
+icons[charging_medium]="<span foreground='#ffad08'>\Uf089d </span>"
+icons[charging_low]="<span foreground='#ff8838'>\Uf0086 </span>"
+icons[charging_empty]="<span foreground='#ff6666'>\Uf089f </span>"
+
+icons[battery_health_warning]="<span foreground='#dc143c'>\Uf10cd </span>"
+# ------ Configurations end ------
+
+# These variable refers to the metrics in upower
+CHARGING_STATE="charging"
+DISCHARGING_STATE="discharging"
+FULLY_CHARGED_STATE="fully-charged"
+TIME_TO_FULL_KEY="time to full"
+TIME_TO_EMPTY_KEY="time to empty"
+
+function get_metrics() {
+  STATS="$(upower -i $DEVICE)"
+
+  echo "$STATS" | rg 'state' | rg --quiet $DISCHARGING_STATE
+  CHARGING=$?
+
+  BATTERY=$(echo "$STATS" | rg 'percentage' | awk '{print $2}' | tr -d '% ')
+  CAPACITY=$(echo "$STATS" | rg 'capacity' | awk '{print $2}' | tr -d '% ')
+
+  TIME_REMAINING=$(echo "$STATS" | rg "$TIME_TO_EMPTY_KEY" | awk -F': ' '{print $2}' | tr -d ' ')
+  TIME_TO_FULL=$(echo "$STATS" | rg "$TIME_TO_FULL_KEY" | awk -F': ' '{print $2}' | tr -d ' ')
+}
+
+function compute_state() {
+  if [[ $CHARGING == 1 ]]; then
+    STATE="charging"
+  else
+    STATE="battery"
+  fi
+}
+
+function compute_level() {
+  if [[ $BATTERY -ge $BATTERY_LEVEL_FULL ]]; then
+    LEVEL="full"
+  elif [[ $BATTERY -ge $BATTERY_LEVEL_HIGH ]]; then
+    LEVEL="high"
+  elif [[ $BATTERY -ge $BATTERY_LEVEL_MEDIUM ]]; then
+    LEVEL="medium"
+  elif [[ $BATTERY -ge $BATTERY_LEVEL_LOW ]]; then
+    LEVEL="low"
+  else
+    LEVEL="empty"
+  fi
+}
+
+function compute_battery_health() {
+  BATTERY_HEALTH_OK=$(echo "$CAPACITY >= $BATTERY_HEALTH_OK_THRESHOLD" | bc)
+}
+
+function display() {
+  if [[ $BATTERY_HEALTH_OK == 1 ]]; then
+    icon_key="${STATE}_${LEVEL}"
+  else
+    icon_key="battery_health_warning"
+    notify-send "Battery Health Warning" "Something wrong with battery capacity. Please check"
+  fi
+  echo -e "${icons[$icon_key]}"
+}
+
+get_metrics
+compute_state
+compute_level
+compute_battery_health
+# LEVEL="full"
+# STATE="charging"
+display
+
+BLOCK_BUTTON=${1:-$BLOCK_BUTTON}
+
+case $BLOCK_BUTTON in
+    1) str=""
+       [[ -z $TIME_TO_FULL ]] || str+="$TIME_TO_FULL_STR $TIME_TO_FULL"
+       [[ -z $TIME_REMAINING ]] || str+="$TIME_TO_EMPTY_STR $TIME_REMAINING"
+       battery_str="$BATTERY% Available "
+       notify-send "$battery_str" "$str"
+       ;;
+esac
+
+# For debugging
+# echo $CHARGING
+# echo $BATTERY
+# echo $CAPACITY
+# [[ -z $TIME_TO_FULL ]] || echo "$TIME_TO_FULL_STR $TIME_TO_FULL"
+# [[ -z $TIME_REMAINING ]] || echo "$TIME_TO_EMPTY_STR $TIME_REMAINING"
+
