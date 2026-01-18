@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(dirname $0)
+
+source "$SCRIPT_DIR/util/handle-failure"
+source "$SCRIPT_DIR/util/display"
+source "$SCRIPT_DIR/util/refresh-dwmblocks"
+
