@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+. $(dirname $0)/sb-load-util
+
+#   |  \uF130   |  <gucharmap shows "<private-use>" as name>
+
+MIC="<span background='#ff4800'> \uF130  </span>"
+NO_MIC=""
+
+DEVICE="@DEFAULT_AUDIO_SOURCE@"
+
+function toggle_mute() {
+  wpctl set-mute $DEVICE toggle
+  display
+}
+
+function success() {
+  refresh_block $SB_MIC "Mic setting changed"
+  exit 0
+}
+
+function display() {
+  local volume=$(wpctl get-volume $DEVICE)   # Volume: 0.69 (or) Volume: 0.69 [MUTED]
+  echo $volume | grep 'MUTED' > /dev/null
+  local muted=$?
+  [[ $muted == 0 ]] && echo -e "$MIC" || echo $NO_MIC
+
+  success
+}
+BLOCK_BUTTON=${1:-$BLOCK_BUTTON}
+
+case $BLOCK_BUTTON in
+    1) toggle_mute ;;
+esac
+
+display
