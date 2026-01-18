@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+. $(dirname $0)/util/display
+
+ICON="󰥔"
+printf -v TEXT '%(%A, %b %d, %H:%M:%S)T' -1
+
+display "$ICON" "$TEXT"
+
