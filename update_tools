@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+
+LOG_FILE=~/update_tools.log
+LOG_FILE=$LOG_FILE:a
+
+touch "$LOG_FILE"
+
+function get_time() {
+	echo "$(date +"%F %T %Z")"
+}
+
+function update_uv() {
+	~/.local/bin/uv self update
+}
+
+echo "--- Update started $(get_time) ---" >> $LOG_FILE
+
+# --- Package updates start here
+
+update_uv >> "$LOG_FILE" 2>&1
+
+# --- Package updates end here
+
+echo "--- Update completed $(get_time) ---" >> $LOG_FILE
