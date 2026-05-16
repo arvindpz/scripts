@@ -13,11 +13,16 @@ function update_uv() {
 	~/.local/bin/uv self update
 }
 
+function update_mise() {
+	~/.local/bin/mise self-update -y
+}
+
 echo "--- Update started $(get_time) ---" >> $LOG_FILE
 
 # --- Package updates start here
 
 update_uv >> "$LOG_FILE" 2>&1
+update_mise >> "$LOG_FILE" 2>&1
 
 # --- Package updates end here
 
